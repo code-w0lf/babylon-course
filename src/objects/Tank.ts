@@ -42,13 +42,6 @@ class Tank {
     this.name = "heroTank";
     this.speed = 2;
     this.front = new Vector3(0, 0, 1);
-
-    document.addEventListener("keydown", (event) =>
-      this.setControls(event, controls, true)
-    );
-    document.addEventListener("keyup", (event) =>
-      this.setControls(event, controls, false)
-    );
   }
 
   public fireCannon(controls: any, dudes: Dude[], assets: Assets) {
@@ -130,27 +123,6 @@ class Tank {
         0,
         Math.cos(this.mesh.rotation.y)
       );
-    }
-  }
-
-  private setControls(event: any, controls: any, isPressed: boolean) {
-    if (event.key == "w" || event.key == "W") {
-      controls.upPressed = isPressed;
-    }
-    if (event.key == "s" || event.key == "S") {
-      controls.downPressed = isPressed;
-    }
-    if (event.key == "a" || event.key == "A") {
-      controls.leftPressed = isPressed;
-    }
-    if (event.key == "d" || event.key == "D") {
-      controls.rightPressed = isPressed;
-    }
-    if (event.key == "b" || event.key == "B") {
-      controls.bPressed = isPressed;
-    }
-    if (event.key == "r" || event.key == "R") {
-      controls.rPressed = isPressed;
     }
   }
 }

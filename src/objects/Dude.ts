@@ -1,5 +1,6 @@
 import {
   Mesh,
+  Skeleton,
   ParticleSystem,
   Scene,
   StandardMaterial,
@@ -29,6 +30,8 @@ class Dude {
     this.speed = speed;
     this.name = mesh.name.concat("_", Dude.count.toString());
     this.health = 3;
+
+    console.log(this.name);
 
     this.boundry = this._createBoundingBox();
     this.particleSystem = this._createParticleSystem();
@@ -147,6 +150,55 @@ class Dude {
       lengthY: lengthY,
       lengthZ: lengthZ,
     };
+  }
+
+  public static doClone(
+    original: Mesh,
+    skeletons: Skeleton[],
+    id: number
+  ): Mesh {
+    const xRand = Math.floor(Math.random() * 501) - 250;
+    const zRand = Math.floor(Math.random() * 501) - 250;
+
+    var clone: Mesh;
+
+    clone = original.clone("clone_" + id);
+    clone.position = new Vector3(xRand, 0, zRand);
+
+    // No skelons in the model
+    if (!skeletons) {
+      return clone;
+    }
+
+    if (!original.getChildren()) {
+      clone.skeleton = skeletons[0].clone("clone_sk_" + id);
+      return clone;
+    } else {
+      if (skeletons.length === 1) {
+        // This means one skeleton controls all anitmaions of children
+        var clonedSkeleton = skeletons[0].clone("clone_sk_" + id);
+        clone.skeleton = clonedSkeleton;
+
+        var numChildren = clone.getChildMeshes().length;
+
+        for (var i = 0; i < numChildren; i++) {
+          clone.getChildMeshes()[i].skeleton = clonedSkeleton;
+        }
+
+        return clone;
+      } else if (skeletons.length === original.getChildren().length) {
+        // Each child has its own skeleton
+        for (var i = 0; i < clone.getChildMeshes().length; i++) {
+          clone.getChildMeshes()[i].skeleton = skeletons[i].clone(
+            "clone_sk_" + id + "_" + i
+          );
+        }
+
+        return clone;
+      }
+    }
+
+    return clone;
   }
 
   public follow(target: Mesh) {

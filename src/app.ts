@@ -10,6 +10,7 @@ import {
   Vector3,
   AbstractAssetTask,
   MeshAssetTask,
+  Camera,
 } from "@babylonjs/core";
 import createCanvas from "./utils/createCanvas";
 import createScene from "./scene/createScene";
@@ -24,14 +25,19 @@ class App {
   private _engine: Engine;
   private _scene: Scene;
   private _settings: any = { isLocked: false };
-  private _controls: any = {
+  private _controls = {
     upPressed: false,
     downPressed: false,
     leftPressed: false,
     rightPressed: false,
     bPressed: false,
     rPressed: false,
+    tPressed: false,
+    yPressed: false,
   };
+
+  private _tankCamera: Camera;
+  private _dudeCamera: Camera;
 
   public dudes: Dude[] = [];
   public tank: Tank;
@@ -47,32 +53,27 @@ class App {
       this.onFinishLoadingAssets.bind(this)
     );
 
+    document.addEventListener("keydown", (event) =>
+      this.setControls(event, true)
+    );
+    document.addEventListener("keyup", (event) =>
+      this.setControls(event, false)
+    );
+
     // Allows the pointer to rotate the camera when we click the left mouse button
     this._scene.onPointerDown = () =>
       addPointerLock(this._scene, this._canvas, this._settings);
 
     this.tank = new Tank(this._scene, this._controls);
-    const camera = createFollowCamera(this._scene, this.tank.mesh);
+    this._tankCamera = createFollowCamera(this._scene, this.tank.mesh);
+
+    this._scene.activeCamera = this._tankCamera;
 
     window.addEventListener("resize", () => {
       this._engine.resize();
     });
 
     this.assets.loadAllAssets();
-
-    // this._engine.runRenderLoop(() => {
-    //   tank.move(this._controls);
-    //   tank.fireCannon(this._controls, this.dudes);
-    //   tank.fireLazer(this._controls, this.dudes);
-
-    //   if (this.dudes && this.dudes.length > 0) {
-    //     for (const dude of this.dudes) {
-    //       dude.follow(tank.mesh);
-    //     }
-    //   }
-
-    //   this._scene.render();
-    // });
   }
 
   private onImported = (
@@ -84,62 +85,17 @@ class App {
     newMeshes[0].name = "heroDude";
     newMeshes[0].scaling = new Vector3(0.2, 0.2, 0.2);
 
-    console.log("imported", newMeshes);
-
     this.dudes.push(new Dude(newMeshes[0], 1, this._scene));
     this._scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
+    this._dudeCamera = createFollowCamera(this._scene, this.dudes[0].mesh);
+
     for (var i = 0; i < 10; i++) {
-      const clone = this.doClone(newMeshes[0], skeletons, i);
+      const clone = Dude.doClone(newMeshes[0], skeletons, i);
       this.dudes.push(new Dude(clone, 1, this._scene));
       this._scene.beginAnimation(clone.skeleton, 0, 120, true, 1.0);
     }
   };
-
-  private doClone(original: Mesh, skeletons: Skeleton[], id: number): Mesh {
-    const xRand = Math.floor(Math.random() * 501) - 250;
-    const zRand = Math.floor(Math.random() * 501) - 250;
-
-    var clone: Mesh;
-
-    clone = original.clone("clone_" + id);
-    clone.position = new Vector3(xRand, 0, zRand);
-
-    // No skelons in the model
-    if (!skeletons) {
-      return clone;
-    }
-
-    if (!original.getChildren()) {
-      clone.skeleton = skeletons[0].clone("clone_sk_" + id);
-      return clone;
-    } else {
-      if (skeletons.length === 1) {
-        // This means one skeleton controls all anitmaions of children
-        var clonedSkeleton = skeletons[0].clone("clone_sk_" + id);
-        clone.skeleton = clonedSkeleton;
-
-        var numChildren = clone.getChildMeshes().length;
-
-        for (var i = 0; i < numChildren; i++) {
-          clone.getChildMeshes()[i].skeleton = clonedSkeleton;
-        }
-
-        return clone;
-      } else if (skeletons.length === original.getChildren().length) {
-        // Each child has its own skeleton
-        for (var i = 0; i < clone.getChildMeshes().length; i++) {
-          clone.getChildMeshes()[i].skeleton = skeletons[i].clone(
-            "clone_sk_" + id + "_" + i
-          );
-        }
-
-        return clone;
-      }
-    }
-
-    return clone;
-  }
 
   private onProgressLoadingAssets(
     remainingCount: number,
@@ -156,9 +112,6 @@ class App {
   }
 
   private onFinishLoadingAssets(tasks: AbstractAssetTask[]) {
-    console.log("All assets finished loading.");
-    console.log("tasks", tasks[3]);
-
     this.onImported([this.assets.dude], null, this.assets.dudeSkeleons);
 
     this._engine.runRenderLoop(this.runRenderLoop);
@@ -171,12 +124,43 @@ class App {
 
     if (this.dudes && this.dudes.length > 0) {
       for (const dude of this.dudes) {
-        dude.follow(this.tank.mesh);
+        if (dude.name !== "heroDude_0") {
+          dude.follow(this.tank.mesh);
+        }
       }
     }
 
     this._scene.render();
   };
+
+  private setControls(event: any, isPressed: boolean) {
+    if (event.key == "w" || event.key == "W") {
+      this._controls.upPressed = isPressed;
+    }
+    if (event.key == "s" || event.key == "S") {
+      this._controls.downPressed = isPressed;
+    }
+    if (event.key == "a" || event.key == "A") {
+      this._controls.leftPressed = isPressed;
+    }
+    if (event.key == "d" || event.key == "D") {
+      this._controls.rightPressed = isPressed;
+    }
+    if (event.key == "b" || event.key == "B") {
+      this._controls.bPressed = isPressed;
+    }
+    if (event.key == "r" || event.key == "R") {
+      this._controls.rPressed = isPressed;
+    }
+    if (event.key == "t" || event.key == "T") {
+      //this._controls.tPressed = isPressed;
+      this._scene.activeCamera = this._tankCamera;
+    }
+    if (event.key == "y" || event.key == "Y") {
+      // this._controls.tPressed = isPressed;
+      this._scene.activeCamera = this._dudeCamera;
+    }
+  }
 }
 
 new App();
