@@ -43,7 +43,7 @@ class Dude {
     boundery.scaling.y = lengthY * this.mesh.scaling.y;
     boundery.scaling.z = lengthZ * this.mesh.scaling.z * 2;
     boundery.checkCollisions = true;
-    boundery.isVisible = true;
+    boundery.isVisible = false;
     boundery.position = new Vector3(
       this.mesh.position.x,
       this.mesh.position.y + (this.mesh.scaling.y * lengthY) / 2,

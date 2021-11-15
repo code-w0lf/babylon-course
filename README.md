@@ -25,3 +25,9 @@ npm start
 ```
 
 Game will be avaliable on port 8080.
+
+## How to play
+
+Move with WASD
+Fire cannon with b
+Fire laser with r
